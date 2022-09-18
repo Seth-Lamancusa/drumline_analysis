@@ -4,49 +4,59 @@ from scipy.signal import find_peaks
 import pandas as pd
 import sounddevice as sd
 
-# FS = 44100
-# SECONDS = 5
-# print("recording")
-# recording = sd.rec(int(SECONDS * FS), samplerate=FS, channels=2)
-# sd.wait()
-# write('output.wav', FS, recording)
+# Comment this out to rerun the analysis on an existing .wav file
+FS = 44100
+SECONDS = 5
+print("recording")
+recording = sd.rec(int(SECONDS * FS), samplerate=FS, channels=2)
+sd.wait()
+write('output.wav', FS, recording)
 
+# Reads data, extracts relevant array and sample rate
 DATA = read('output.wav')
 data_new = [x[0] for x in DATA[1]]
 sample_rate = DATA[0]
 
+# Adjust these to experiment with how sensitive the program is to notes being played close together
 MAX_BPM = 260
 MAX_NOTES_PER_BEAT = 6
 distance = sample_rate / (MAX_NOTES_PER_BEAT * (MAX_BPM / 60))
 
+# Adjust these to indicate the music you intend to play
 UPBEAT = 0
 INTENDED_RHYTHM = [3, 3, 3, 3, 3, 3, 3, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 1]
 INTENDED_BPM = 150
 samples_per_beat = sample_rate / (INTENDED_BPM / 60)
 
+# Smooths the data
 window_size = round(distance)
 data_smooth = pd.Series(data_new).rolling(
     window_size).max().tolist()
 
+# Finds peaks and generates array
 peaks = find_peaks([x[0] for x in DATA[1]], height=.05, distance=distance)
 peaks_smooth = find_peaks(data_smooth, height=.05, distance=distance)
 # Don't ask
 peaks_new = ([x for x in peaks[0] if any(
     [y in range(round(x - distance), round(x + distance)) for y in peaks_smooth[0]])], peaks[1])
 
+# Generates timings array from waveform
 timings = []
 for peak in peaks_new[0]:
     timings.append(peak - peaks_new[0][0])
 
+# Generates expected timings array
 expected_timings = []
 total = 0
 for note in INTENDED_RHYTHM:
     expected_timings.append(round(total))
     total += samples_per_beat / note
 
+# Generates array indicating tempo
 beats = [
     x for x in range(0, round(len(data_smooth) / samples_per_beat))]
 
+# Generates statistics about your error
 errors = [abs(timings[i] - expected_timings[i])
           for i in range(len(expected_timings))]
 total_error = sum(errors)
@@ -58,13 +68,14 @@ biggest_error = max(errors)
 biggest_error_beats = biggest_error / samples_per_beat
 biggest_error_index = errors.index(biggest_error)
 
+# Generates strings for plot
 s1 = f'Total error in beats: {round(total_error_beats, 3)}\n'
 s2 = f'Total error in seconds: {round(total_error_seconds, 3)}\n'
 s3 = f'Average error in beats: {round(average_error_beats * 100, 2)}%\n'
 s4 = f'Average error in seconds: {round(average_error_seconds, 3)}\n'
 s5 = f'Biggest error of {round(biggest_error_beats * 100, 2)}% of a beat on note {biggest_error_index + 1}'
 
-
+# Generates plot
 plt.figure()
 
 # Plot wave form with peaks indicated in red
