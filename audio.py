@@ -4,10 +4,11 @@ from scipy.signal import find_peaks
 import pandas as pd
 import sounddevice as sd
 
-# Type the indices of the false positive notes after running program once to adjust for error in peak detection
-# This is necessary for error calculations to be accurate
+# Type the indices of the false positive notes after running the program once to adjust for errors in the peak detection
+# This is necessary for statistical analysis to be accurate
 OMIT_PEAKS = [1, 8, 20]
 
+# Don't forget to set MAKE_NEW_RECORDING to false after adjusting OMIT_PEAKS
 MAKE_NEW_RECORDING = False
 GENERATE_STATS = True
 
@@ -16,12 +17,11 @@ DATA = read("output.wav")
 data_new = [x[0] for x in DATA[1]]
 sample_rate = DATA[0]
 
-# Adjust these to indicate the music you intend to play
-UPBEAT = 0
-# Tppe a float for each note you intend to play:
+# Type a float for each note you intend to play:
 # Type the number of that note which would be in a beat. 3 = triplets, 4 = sixteenth notes, 2.5 for a 5:2 polyrhythm, etc.
 INTENDED_RHYTHM = [3, 3, 3, 3, 3, 3, 3, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 1]
 INTENDED_BPM = 150
+UPBEAT = 0
 samples_per_beat = sample_rate / (INTENDED_BPM / 60)
 
 # Make a new recording if parameter is set
@@ -45,7 +45,6 @@ data_smooth = pd.Series(data_new).rolling(window_size).max().tolist()
 # Finds peaks and generates array
 peaks = find_peaks([x[0] for x in DATA[1]], height=0.04, distance=distance)
 peaks_smooth = find_peaks(data_smooth, height=0.04, distance=distance)
-# Don't ask
 peaks_new = (
     [
         x
@@ -117,4 +116,5 @@ plt.plot(timings, [-0.1] * len(timings), "r|")
 if GENERATE_STATS:
     plt.text(0.5, 1.05, s1 + s2 + s3 + s4 + s5, fontsize="x-small")
 plt.ylim(top=1, bottom=-1)
+plt.savefig("output.png")
 plt.show()
