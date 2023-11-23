@@ -23,7 +23,7 @@ You'll be surprised how poorly you actually play these. Get back to the basics. 
 
 To use, locate the "audio.py" script and follow these steps:
 
-1. Change INTENDED_BPM and INTENDED_RHYTHM according to comment.
+1. Change INTENDED_BPM and INTENDED_RHYTHM according to comment. You can also add an UPBEAT if necessary.
 2. Ensure MAKE_NEW_RECORDING is True and SECONDS is set to a number close to how long your recording will take.
 
 The script will record your audio for SECONDS seconds, indicated by a terminal prompt. When it's over, a .wav file will be generated, placed in the main project directory, and analyzed. You'll recieve a friendly matplotlib chart with insights into your rhythmic accuracy and volume like the following, saved to the main directory as "output.png":
